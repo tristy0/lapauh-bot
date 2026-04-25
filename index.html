@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Колесо Рыжика</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #fff7ed 0%, #ffe8c7 100%);
+      color: #2b1b12;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      text-align: center;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: 28px;
+      padding: 24px 18px 26px;
+      box-shadow: 0 18px 50px rgba(110, 62, 20, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+    }
+
+    h1 {
+      font-size: 26px;
+      line-height: 1.15;
+      margin: 0 0 8px;
+    }
+
+    .subtitle {
+      margin: 0 auto 22px;
+      max-width: 320px;
+      font-size: 15px;
+      line-height: 1.4;
+      color: #6b4b34;
+    }
+
+    .wheel-wrap {
+      position: relative;
+      width: 310px;
+      height: 310px;
+      margin: 0 auto 20px;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 38px solid #3b2416;
+      z-index: 5;
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.18));
+    }
+
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      border: 10px solid #3b2416;
+      box-shadow: inset 0 0 0 5px #fff, 0 12px 30px rgba(0,0,0,0.18);
+      transition: transform 4s cubic-bezier(0.12, 0.82, 0.18, 1);
+      background: conic-gradient(
+        #ffb347 0deg 45deg,
+        #fff0c9 45deg 90deg,
+        #ff8f3d 90deg 135deg,
+        #ffe08a 135deg 180deg,
+        #f4a261 180deg 225deg,
+        #fff7d6 225deg 270deg,
+        #e76f51 270deg 315deg,
+        #ffd166 315deg 360deg
+      );
+    }
+
+    .wheel::after {
+      content: "🐾";
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #3b2416;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 34px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 0 6px #fff;
+    }
+
+    .segment-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 94px;
+      margin-left: -47px;
+      margin-top: -10px;
+      font-weight: 800;
+      font-size: 13px;
+      color: #3b2416;
+      transform-origin: 47px 10px;
+    }
+
+    .label-1 { transform: rotate(22.5deg) translateY(-118px); }
+    .label-2 { transform: rotate(67.5deg) translateY(-118px); }
+    .label-3 { transform: rotate(112.5deg) translateY(-118px); }
+    .label-4 { transform: rotate(157.5deg) translateY(-118px); }
+    .label-5 { transform: rotate(202.5deg) translateY(-118px); }
+    .label-6 { transform: rotate(247.5deg) translateY(-118px); }
+    .label-7 { transform: rotate(292.5deg) translateY(-118px); }
+    .label-8 { transform: rotate(337.5deg) translateY(-118px); }
+
+    .spin-button {
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      background: #3b2416;
+      color: #fff;
+      padding: 16px 18px;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(59, 36, 22, 0.25);
+    }
+
+    .spin-button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .note {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #7c5c42;
+    }
+
+    .result {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 22px;
+      background: #fff6df;
+      border: 1px solid #f0c77c;
+    }
+
+    .result h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .prize {
+      font-size: 28px;
+      font-weight: 900;
+      margin: 8px 0;
+      color: #b84a1b;
+    }
+
+    .promo {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: #3b2416;
+      color: #fff;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .claim-button {
+      margin-top: 14px;
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      background: #e76f51;
+      color: #fff;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <h1>🐱 Колесо подарков мистера Рыжика</h1>
+      <p class="subtitle">Крутите колесо раз в день и получайте скидки, подарки и секретные предложения от «Лапаух».</p>
+
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel">
+          <div class="segment-label label-1">5%</div>
+          <div class="segment-label label-2">10%</div>
+          <div class="segment-label label-3">15%</div>
+          <div class="segment-label label-4">20%</div>
+          <div class="segment-label label-5">Доставка</div>
+          <div class="segment-label label-6">Подарок</div>
+          <div class="segment-label label-7">50%</div>
+          <div class="segment-label label-8">Завтра</div>
+        </div>
+      </div>
+
+      <button class="spin-button" id="spinBtn">🎁 Крутить колесо</button>
+      <div class="note" id="note">Сегодня уже 34 хозяина котиков получили подарки 🐾</div>
+
+      <div class="result" id="result">
+        <h2>🎉 Мяу! Ваш приз:</h2>
+        <div class="prize" id="prizeText">10%</div>
+        <div>Промокод:</div>
+        <div class="promo" id="promoText">RYZHIK10</div>
+        <button class="claim-button" id="claimBtn">Забрать приз</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      tg.MainButton.hide();
+    }
+
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spinBtn');
+    const result = document.getElementById('result');
+    const prizeText = document.getElementById('prizeText');
+    const promoText = document.getElementById('promoText');
+    const claimBtn = document.getElementById('claimBtn');
+    const note = document.getElementById('note');
+
+    const prizes = [
+      { label: '5% скидка', promo: 'RYZHIK5', angle: 22.5, weight: 35 },
+      { label: '10% скидка', promo: 'RYZHIK10', angle: 67.5, weight: 25 },
+      { label: '15% скидка', promo: 'RYZHIK15', angle: 112.5, weight: 15 },
+      { label: '20% скидка', promo: 'RYZHIK20', angle: 157.5, weight: 10 },
+      { label: 'Бесплатная доставка', promo: 'DOSTAVKA', angle: 202.5, weight: 7 },
+      { label: 'Подарок к заказу', promo: 'PODAROK', angle: 247.5, weight: 5 },
+      { label: '50% скидка', promo: 'RYZHIK50', angle: 292.5, weight: 1 },
+      { label: 'Попробуйте завтра', promo: 'TOMORROW', angle: 337.5, weight: 2 },
+    ];
+
+    let currentRotation = 0;
+    let isSpinning = false;
+
+    function weightedRandom(items) {
+      const total = items.reduce((sum, item) => sum + item.weight, 0);
+      let random = Math.random() * total;
+
+      for (const item of items) {
+        random -= item.weight;
+        if (random <= 0) return item;
+      }
+      return items[0];
+    }
+
+    function canSpinToday() {
+      const lastSpin = localStorage.getItem('lapauh_last_spin');
+      const today = new Date().toDateString();
+      return lastSpin !== today;
+    }
+
+    function setSpunToday() {
+      localStorage.setItem('lapauh_last_spin', new Date().toDateString());
+    }
+
+    function updateDailyState() {
+      if (!canSpinToday()) {
+        spinBtn.disabled = true;
+        spinBtn.textContent = '⏳ Следующее вращение завтра';
+        note.textContent = 'Мистер Рыжик уже выдал вам подарок сегодня 🐱';
+      }
+    }
+
+    spinBtn.addEventListener('click', () => {
+      if (isSpinning || !canSpinToday()) return;
+
+      isSpinning = true;
+      spinBtn.disabled = true;
+      result.style.display = 'none';
+      note.textContent = 'Рыжик крутит колесо... 🐾';
+
+      const prize = weightedRandom(prizes);
+      const extraSpins = 360 * 6;
+      const targetRotation = extraSpins + (360 - prize.angle);
+      currentRotation += targetRotation;
+
+      wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+      setTimeout(() => {
+        prizeText.textContent = prize.label;
+        promoText.textContent = prize.promo;
+        result.style.display = 'block';
+        setSpunToday();
+        updateDailyState();
+        isSpinning = false;
+      }, 4200);
+    });
+
+    claimBtn.addEventListener('click', () => {
+      window.open('https://t.me/lapaux', '_blank');
+    });
+
+    updateDailyState();
+  </script>
+</body>
+</html>
